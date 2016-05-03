@@ -1,0 +1,10 @@
+[Unit]
+Description=TCP/Serial Bridge
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/socat /dev/ttyAMA0,b9600,cstopb=0,cs8,parenb=0,raw,echo=0 TCP-LISTEN:54321,keepalive=1,keepidle=1,keepintvl=1,keepcnt=3,reuseaddr,nodelay
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
