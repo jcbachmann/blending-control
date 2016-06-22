@@ -7,6 +7,7 @@ import time
 conn = None
 dgram = b''
 pos = 0
+startingPosMM = 450
 pending = dict()
 stockpileLength = 550000
 mmLength = 500000/635
@@ -45,10 +46,11 @@ def stop():
 	send(3, 0, 0)
 
 def moveToStockpile(value):
-	send(4, 0, round(value * stockpileLength))
+	global startingPos
+	send(4, 0, round(startingPosMM * mmLength + value * stockpileLength))
 
 def moveToMM(value):
-	send(4, 0, round(value * mmLength))
+	send(4, 0, round((value + startingPosMM) * mmLength))
 
 def poll():
 	global conn
@@ -84,11 +86,11 @@ def initReq():
 
 def getPosInStockpile():
 	global pos
-	return pos / stockpileLength
+	return (pos - startingPosMM * mmLength) / stockpileLength
 
 def getPosInMM():
 	global pos
-	return pos / mmLength
+	return (pos / mmLength) - startingPosMM
 
 def blockingMoveToStockpile(pos):
 	poll()
