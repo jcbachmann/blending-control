@@ -23,11 +23,13 @@ options = [
 #--- drive
 ["flush stockpile",  lambda: drive.flush()],
 ["drive to start pos", lambda: drive.moveToStockpile(0)],
+["drive to end pos", lambda: drive.moveToStockpile(1)],
 ["drive to dump pos", lambda: drive.moveToMM(-400)],
 ["drive left", lambda: drive.run(-1000)],
 ["drive right", lambda: drive.run(1000)],
 ["drive stop", lambda: drive.stop()],
 #--- other
+["colorcount", lambda: os.system("colorcount")],
 ["alarm", "./alarm.sh"],
 ["poweroff", lambda: os.system("poweroff")],
 ["reboot", lambda: os.system("reboot")],
@@ -70,7 +72,7 @@ def showMenu():
 		index += 1
 		if(index == 5): printTopic("feeder")
 		if(index == 7): printTopic("drive")
-		if(index == 13): printTopic("other")
+		if(index == 14): printTopic("other")
 		print(str(index) + " - " + option[0])
 	print("\n")
 	response = int(input("Choose your choice...\n")) - 1
