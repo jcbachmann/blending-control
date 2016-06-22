@@ -9,6 +9,8 @@ dgram = b''
 pos = 0
 startingPosMM = 450
 pending = dict()
+issued = dict()
+lastPending = 0
 stockpileLength = 550000
 mmLength = 500000/635
 
@@ -21,15 +23,23 @@ def init():
 	conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 	conn.connect(("192.168.178.29", 54321))
 	conn.setblocking(0)
-	initReq()
+	sendCaptureAndGetCommand()
 
 def send(instruction, type, value):
 	global conn
 	global pending
+	global issued
+	global lastPending
+	#if time.time() < lastPending + 1.0:
+	#	print('Already lastPending ', instruction)
+	#	return
+	lastPending = time.time()
 	if instruction in pending and time.time() < pending[instruction] + 0.2:
-		#print('Already pending')
+		print('Already pending ', instruction)
 		return
+	print('Sent ', instruction)
 	pending[instruction] = time.time()
+	issued[instruction] = time.time()
 	address = 1
 	motor = 0
 	dgram = struct.pack('>BBBBi', address, instruction, type, motor, value)
@@ -52,7 +62,7 @@ def moveToStockpile(value):
 def moveToMM(value):
 	send(4, 0, round((value + startingPosMM) * mmLength))
 
-def poll():
+def pollWithoutCapture():
 	global conn
 	global dgram
 	try:
@@ -63,11 +73,16 @@ def poll():
 				dgram = b''
 	except BlockingIOError:
 		pass
-	initReq()
+
+def poll():
+	pollWithoutCapture()
+	sendCaptureAndGetCommand()
 
 def parse(dgram):
 	global pending
+	global issued
 	global pos
+	global lastPending
 	if sum(dgram[:8]) % 256 != dgram[8]:
 		raise IOError('wrong serial checksum')
 	
@@ -75,14 +90,17 @@ def parse(dgram):
 
 	if instruction in pending:
 		pending.pop(instruction)
+		lastPending = 0
 
 	if instruction == get_coordinate:
 		pos = value
-		initReq()
+		sendCaptureAndGetCommand()
 		
-def initReq():
-	send(capture_coordinate, 1, 0)
-	send(get_coordinate, 1, 0)
+def sendCaptureAndGetCommand():
+	if capture_coordinate not in issued or time.time() > issued[capture_coordinate] + 0.2:
+		send(capture_coordinate, 1, 0)
+	if get_coordinate not in issued or time.time() > issued[get_coordinate] + 0.2:
+		send(get_coordinate, 1, 0)
 
 def getPosInStockpile():
 	global pos

@@ -59,9 +59,9 @@ def stack(file):
 		currentFlow = flow.getLastSum()
 
 		currentPos = lastPos + (nextPos - lastPos) * (currentStepMaterial / targetStepMaterial)
-		line += "\t" + str(drive.getPosInStockpile())
+		line += "\t" + str(currentPos) # because of pollWithoutCapture, else: str(drive.getPosInStockpile())
 		logFile.write(line + "\n")
-		drive.poll()
+		drive.pollWithoutCapture()
 		drive.moveToStockpile(currentPos)
 		print('Step ' + str(programStep) + '/' + str(len(program) - 1))
 		print(str(currentStepMaterial) + ' of ' + str(targetStepMaterial) + ' mm3, ' + str(round(100 * currentStepMaterial / targetStepMaterial)) + '% @ ' + str(round(currentFlow)) + ' mm3/s')
